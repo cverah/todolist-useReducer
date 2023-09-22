@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import React, { useState } from "react";
+import React, { useReducer } from "react";
 import { Global, css } from "@emotion/react";
 import { FaTrash, FaStar } from "react-icons/fa";
 
@@ -26,38 +26,82 @@ const globalStyles = css`
     );
   }
 `;
+function reducerData(data, { type, payload }) {
+  switch (type) {
+    case "CHANGE":
+      return { ...data, [payload.name]: payload.value };
+    case "CLEAR":
+      return { text: "", priority: false };
+    default:
+      break;
+  }
+}
 
+function taskReducer(tasks, { type, payload }) {
+  switch (type) {
+    case "ADD":
+      return [...tasks, payload];
+    case "REMOVE":
+      const newTasks = [...tasks];
+      newTasks.splice(payload.index, 1);
+      return newTasks;
+    case "TOGGLEFAVORITE":
+      return payload;
+    default:
+      break;
+  }
+}
 export default function App() {
-  const [data, setData] = useState({ text: "", priority: false });
-  const [tasks, setTasks] = useState([
-    { text: "This is an example task", priority: false }
+  // const [data, setData] = useState({ text: "", priority: false });
+  const [data, fetchData] = useReducer(reducerData, {
+    text: "",
+    priority: false,
+  });
+
+  const [tasks, fetchTasks] = useReducer(taskReducer, [
+    { text: "This is an example task", priority: false },
   ]);
 
   const handleChange = (name, value) => {
-    setData({ ...data, [name]: value });
+    // setData({ ...data, [name]: value });
+    // console.log({ ...data, [name]: value });
+    fetchData({
+      type: "CHANGE",
+      payload: { name, value },
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (data.text === "") return;
-    setTasks([...tasks, data]);
-    setData({ text: "", priority: false });
+    // setTasks([...tasks, data]);
+    fetchTasks({
+      type: "ADD",
+      payload: data,
+    });
+    // setData({ text: "", priority: false });
+    fetchData({
+      type: "CLEAR",
+    });
   };
 
   const handleRemove = (index) => {
-    const newTasks = [...tasks];
-    newTasks.splice(index, 1);
-    setTasks(newTasks);
+    // setTasks(newTasks);
+    fetchTasks({
+      type: "REMOVE",
+      payload: { index },
+    });
   };
 
   const togglePriority = (index) => {
-    const newTasks = tasks.map((task, i) => {
+    const taskFavorites = tasks.map((task, i) => {
       if (i === index) {
         task.priority = !task.priority;
       }
       return task;
     });
-    setTasks(newTasks);
+    fetchTasks({ type: "TOGGLEFAVORITE", payload: taskFavorites });
+    // setTasks(newTasks);
   };
 
   return (
